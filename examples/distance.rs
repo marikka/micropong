@@ -6,12 +6,12 @@ use cortex_m_rt::entry;
 
 use crate::hal::{delay::Delay, prelude::*, stm32};
 use embedded_hal::digital::v2::OutputPin;
-use stm32f0xx_hal as hal;
-use vl53l0x::VL53L0x;
-use hal::i2c::I2c;
-use hal::stm32f0::stm32f0x2::I2C1;
 use hal::gpio::gpiob::{PB6, PB7};
 use hal::gpio::{Alternate, AF1};
+use hal::i2c::I2c;
+use hal::stm32f0::stm32f0x2::I2C1;
+use stm32f0xx_hal as hal;
+use vl53l0x::VL53L0x;
 const TOF_TIMING_BUDGET_MS: u32 = 33000;
 
 #[entry]
@@ -28,7 +28,11 @@ fn main() -> ! {
     }
 }
 
-fn config() -> (impl OutputPin<Error = ()>, VL53L0x<I2c<I2C1, PB6<Alternate<AF1>>, PB7<Alternate<AF1>>>>, Delay) {
+fn config() -> (
+    impl OutputPin<Error = ()>,
+    VL53L0x<I2c<I2C1, PB6<Alternate<AF1>>, PB7<Alternate<AF1>>>>,
+    Delay,
+) {
     let mut p = stm32::Peripherals::take().unwrap();
     let cp = cortex_m::peripheral::Peripherals::take().unwrap();
 
@@ -40,7 +44,7 @@ fn config() -> (impl OutputPin<Error = ()>, VL53L0x<I2c<I2C1, PB6<Alternate<AF1>
         let sda = gpiob.pb7.into_alternate_af1(cs); //D4
         let delay = Delay::new(cp.SYST, &rcc);
 
-        let mut i2c = I2c::i2c1(p.I2C1, (scl, sda), 100.khz(), &mut rcc);
+        let i2c = I2c::i2c1(p.I2C1, (scl, sda), 100.khz(), &mut rcc);
         let mut tof = vl53l0x::VL53L0x::new(i2c).unwrap();
 
         tof.set_measurement_timing_budget(TOF_TIMING_BUDGET_MS)

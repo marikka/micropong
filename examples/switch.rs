@@ -4,22 +4,25 @@
 extern crate panic_halt;
 use cortex_m_rt::entry;
 
-use crate::hal::{delay::Delay, prelude::*, stm32};
-use embedded_hal::digital::v2::{OutputPin, InputPin};
+use crate::hal::{prelude::*, stm32};
+use embedded_hal::digital::v2::{InputPin, OutputPin};
 use stm32f0xx_hal as hal;
 
 #[entry]
 fn main() -> ! {
-    let (mut led, mut switch) = config();
+    let (mut led, switch) = config();
     loop {
-        if switch.is_high().unwrap() {led.set_high().unwrap() } else {led.set_low().unwrap()}
+        if switch.is_high().unwrap() {
+            led.set_high().unwrap()
+        } else {
+            led.set_low().unwrap()
+        }
     }
 }
 
 //Configure MCU, and return *abstract* pin trait. The real type is PB3<Output<PushPull>>
 fn config() -> (impl OutputPin<Error = ()>, impl InputPin<Error = ()>) {
     let mut p = stm32::Peripherals::take().unwrap();
-    let cp = cortex_m::peripheral::Peripherals::take().unwrap();
 
     cortex_m::interrupt::free(move |cs| {
         let mut rcc = p.RCC.configure().sysclk(8.mhz()).freeze(&mut p.FLASH);
