@@ -2,7 +2,7 @@
 authors = ["Marek Miettinen <marek.miettinen@gmail.com>"]
 edition = "2018"
 readme = "README.md"
-name = "stm32f042-demo"
+name = "micropong"
 version = "0.1.0"
 
 [dependencies]
@@ -17,11 +17,12 @@ stm32f0xx-hal = {version = "0.14.1", features=["stm32f042"]}
 
 embedded-hal = {version = "0.2.3", features = ["unproven"]}
 
-vl53l0x = "0.2.2"
+ssd1306 = {version ="0.2.6", features=["graphics"]}
+embedded-graphics = "0.4.5"
 
 # this lets you use `cargo fix`!
 [[bin]]
-name = "stm32f042-demo"
+name = "micropong"
 test = false
 bench = false
 
