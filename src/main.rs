@@ -5,7 +5,11 @@ extern crate panic_halt;
 use cortex_m_rt::entry;
 
 use crate::hal::{delay::Delay, prelude::*, stm32};
+use embedded_hal::digital::v2::InputPin;
+use hal::gpio::gpiob::{PB6, PB7};
+use hal::gpio::{Alternate, AF1};
 use hal::i2c::I2c;
+use hal::stm32f0::stm32f0x2::I2C1;
 use stm32f0xx_hal as hal;
 
 use embedded_graphics::fonts::Font6x8;
@@ -22,10 +26,91 @@ const PADDLE_THICKNESS: u8 = 2;
 const PADDLE_WIDTH: u8 = 8;
 const SCREEN_WIDTH: u8 = 128;
 const SCREEN_HEIGHT: u8 = 32;
+const SCORE_SCREEN_DELAY_MS: u16 = 2000;
 
 #[entry]
 fn main() -> ! {
-    config();
+    let (mut delay, i2c, p1_t1, p1_t2, p2_t1, p2_t2) = config_hardware();
+
+    let mut disp: GraphicsMode<_> = Builder::new()
+        .with_size(DisplaySize::Display128x32)
+        .connect_i2c(i2c)
+        .into();
+    disp.init().unwrap();
+    disp.flush().unwrap();
+
+    let mut player_1 = Player::new(End::Left);
+    let mut player_2 = Player::new(End::Right);
+    let (mut p1_score, mut p2_score) = (0, 0);
+
+    loop {
+        let mut ball = Ball::new();
+        disp.clear();
+
+        let mut score_str = ArrayString::<[u8; 20]>::new();
+        write!(&mut score_str, "{} - {}", p1_score, p2_score).expect("Can't write");
+        disp.draw(
+            Font6x8::render_str(&score_str)
+                .with_stroke(Some(1u8.into()))
+                .translate(Coord::new(
+                    (SCREEN_WIDTH as i32 / 2) - 3 * 6,
+                    SCREEN_HEIGHT as i32 / 2,
+                ))
+                .into_iter(),
+        );
+
+        disp.flush().unwrap();
+
+        delay.delay_ms(SCORE_SCREEN_DELAY_MS);
+
+        let (p1_points, p2_points) = loop {
+            if ball.is_at_end(End::Left) {
+                if ball.test_collision(&player_1) {
+                    ball.bounce();
+                } else {
+                    break (0, 1);
+                }
+            }
+            if ball.is_at_end(End::Right) {
+                if ball.test_collision(&player_2) {
+                    ball.bounce();
+                } else {
+                    break (1, 0);
+                }
+            }
+
+            ball.update();
+            disp.clear();
+
+            match (p1_t1.is_low(), p1_t2.is_low()) {
+                (Ok(true), Ok(false)) => {
+                    player_1.move_paddle_left();
+                }
+                (Ok(false), Ok(true)) => {
+                    player_1.move_paddle_right();
+                }
+                _ => {}
+            };
+
+            match (p2_t1.is_low(), p2_t2.is_low()) {
+                (Ok(true), Ok(false)) => {
+                    player_2.move_paddle_left();
+                }
+                (Ok(false), Ok(true)) => {
+                    player_2.move_paddle_right();
+                }
+                _ => {}
+            };
+
+            disp.draw(ball.drawable());
+            disp.draw(player_1.paddle_drawable());
+            disp.draw(player_2.paddle_drawable());
+
+            disp.flush().unwrap();
+        };
+        p1_score += p1_points;
+        p2_score += p2_points;
+    }
 }
 
 enum End {
@@ -135,7 +220,14 @@ impl Ball {
     }
 }
 
-fn config() -> ! {
+fn config_hardware() -> (
+    Delay,
+    I2c<I2C1, PB6<Alternate<AF1>>, PB7<Alternate<AF1>>>,
+    impl InputPin<Error = ()>,
+    impl InputPin<Error = ()>,
+    impl InputPin<Error = ()>,
+    impl InputPin<Error = ()>,
+) {
     let mut p = stm32::Peripherals::take().unwrap();
     let cp = cortex_m::peripheral::Peripherals::take().unwrap();
 
@@ -153,88 +245,10 @@ fn config() -> ! {
         let p2_t1 = gpioa.pa2.into_pull_up_input(cs); //A7
         let p2_t2 = gpioa.pa7.into_pull_up_input(cs); //A6
 
-        let mut delay = Delay::new(cp.SYST, &rcc);
+        let delay = Delay::new(cp.SYST, &rcc);
 
         let i2c = I2c::i2c1(p.I2C1, (scl, sda), 100.khz(), &mut rcc);
 
-        let mut disp: GraphicsMode<_> = Builder::new()
-            .with_size(DisplaySize::Display128x32)
-            .connect_i2c(i2c)
-            .into();
-        disp.init().unwrap();
-        disp.flush().unwrap();
-
-        let mut player_1 = Player::new(End::Left);
-        let mut player_2 = Player::new(End::Right);
-        let (mut p1_score, mut p2_score) = (0, 0);
-
-        loop {
-            let mut ball = Ball::new();
-            disp.clear();
-
-            let mut score_str = ArrayString::<[u8; 20]>::new();
-            write!(&mut score_str, "{} - {}", p1_score, p2_score).expect("Can't write");
-            disp.draw(
-                Font6x8::render_str(&score_str)
-                    .with_stroke(Some(1u8.into()))
-                    .translate(Coord::new(
-                        SCREEN_WIDTH as i32 / 2,
-                        SCREEN_HEIGHT as i32 / 2,
-                    ))
-                    .into_iter(),
-            );
-
-            disp.flush().unwrap();
-
-            delay.delay_ms(2000u16);
-
-            let (p1_points, p2_points) = loop {
-                if ball.is_at_end(End::Left) {
-                    if ball.test_collision(&player_1) {
-                        ball.bounce();
-                    } else {
-                        break (0, 1);
-                    }
-                }
-                if ball.is_at_end(End::Right) {
-                    if ball.test_collision(&player_2) {
-                        ball.bounce();
-                    } else {
-                        break (1, 0);
-                    }
-                }
-
-                ball.update();
-                disp.clear();
-
-                match (p1_t1.is_low(), p1_t2.is_low()) {
-                    (true, false) => {
-                        player_1.move_paddle_left();
-                    }
-                    (false, true) => {
-                        player_1.move_paddle_right();
-                    }
-                    _ => {}
-                };
-
-                match (p2_t1.is_low(), p2_t2.is_low()) {
-                    (true, false) => {
-                        player_2.move_paddle_left();
-                    }
-                    (false, true) => {
-                        player_2.move_paddle_right();
-                    }
-                    _ => {}
-                };
-
-                disp.draw(ball.drawable());
-                disp.draw(player_1.paddle_drawable());
-                disp.draw(player_2.paddle_drawable());
-
-                disp.flush().unwrap();
-            };
-            p1_score += p1_points;
-            p2_score += p2_points;
-        }
+        (delay, i2c, p1_t1, p1_t2, p2_t1, p2_t2)
     })
 }
