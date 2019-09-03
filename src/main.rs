@@ -64,19 +64,21 @@ fn main() -> ! {
         delay.delay_ms(SCORE_SCREEN_DELAY_MS);
 
         let (p1_points, p2_points) = loop {
-            if ball.is_at_end(End::Left) {
+            if ball.is_at_paddle(End::Left) {
                 if ball.test_collision(&player_1) {
                     ball.bounce();
-                } else {
-                    break (0, 1);
                 }
             }
-            if ball.is_at_end(End::Right) {
+            if ball.is_at_paddle(End::Right) {
                 if ball.test_collision(&player_2) {
                     ball.bounce();
-                } else {
-                    break (1, 0);
                 }
+            }
+            if ball.is_at_end(End::Left) {
+                break (0, 1);
+            }
+            if ball.is_at_end(End::Right) {
+                break (1, 0);
             }
 
             ball.update();
@@ -199,13 +201,21 @@ impl Ball {
     }
 
     fn test_collision(&self, player: &Player) -> bool {
-        (i8::abs(self.y as i8 - player.paddle_position as i8) as u8) <= (PADDLE_WIDTH / 2)
+        self.y as i8 >= player.paddle_position as i8
+            && self.y as i8 <= player.paddle_position as i8 + PADDLE_WIDTH as i8 - 1
     }
 
     fn is_at_end(&self, end: End) -> bool {
         match end {
             End::Left => self.x < self.radius,
             End::Right => self.x >= (SCREEN_WIDTH - self.radius),
+        }
+    }
+
+    fn is_at_paddle(&self, end: End) -> bool {
+        match end {
+            End::Left => self.x < self.radius + PADDLE_THICKNESS,
+            End::Right => self.x >= (SCREEN_WIDTH - self.radius - PADDLE_THICKNESS),
         }
     }
 
