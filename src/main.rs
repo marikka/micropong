@@ -12,7 +12,7 @@ use hal::i2c::I2c;
 use hal::stm32f0::stm32f0x2::I2C1;
 use stm32f0xx_hal as hal;
 
-use embedded_graphics::fonts::Font6x8;
+use embedded_graphics::fonts::Font8x16;
 use embedded_graphics::pixelcolor::PixelColorU8;
 use embedded_graphics::prelude::*;
 use embedded_graphics::primitives::{Circle, Rect};
@@ -50,11 +50,11 @@ fn main() -> ! {
         let mut score_str = ArrayString::<[u8; 20]>::new();
         write!(&mut score_str, "{} - {}", p1_score, p2_score).expect("Can't write");
         disp.draw(
-            Font6x8::render_str(&score_str)
+            Font8x16::render_str(&score_str)
                 .with_stroke(Some(1u8.into()))
                 .translate(Coord::new(
-                    (SCREEN_WIDTH as i32 / 2) - 3 * 6,
-                    SCREEN_HEIGHT as i32 / 2,
+                    (SCREEN_WIDTH as i32 / 2) - 3 * 8,
+                    (SCREEN_HEIGHT as i32 / 2) - (16 / 2),
                 ))
                 .into_iter(),
         );
@@ -257,7 +257,7 @@ fn config_hardware() -> (
 
         let delay = Delay::new(cp.SYST, &rcc);
 
-        let i2c = I2c::i2c1(p.I2C1, (scl, sda), 100.khz(), &mut rcc);
+        let i2c = I2c::i2c1(p.I2C1, (scl, sda), 400.khz(), &mut rcc);
 
         (delay, i2c, p1_t1, p1_t2, p2_t1, p2_t2)
     })
