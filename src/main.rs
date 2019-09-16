@@ -42,9 +42,15 @@ fn main() -> ! {
     let mut player_1 = Player::new(End::Left);
     let mut player_2 = Player::new(End::Right);
     let (mut p1_score, mut p2_score) = (0, 0);
+    let mut last_winner_id = 1;
 
     loop {
-        let mut ball = Ball::new();
+        let vx = match last_winner_id {
+            1 => 2,
+            _ => -2,
+        };
+
+        let mut ball = Ball::new(vx);
         disp.clear();
 
         let mut score_str = ArrayString::<[u8; 20]>::new();
@@ -63,7 +69,7 @@ fn main() -> ! {
 
         delay.delay_ms(SCORE_SCREEN_DELAY_MS);
 
-        let (p1_points, p2_points) = loop {
+        last_winner_id = loop {
             if ball.is_at_paddle(End::Left) {
                 if ball.test_collision(&player_1) {
                     ball.bounce();
@@ -75,10 +81,10 @@ fn main() -> ! {
                 }
             }
             if ball.is_at_end(End::Left) {
-                break (0, 1);
+                break 2;
             }
             if ball.is_at_end(End::Right) {
-                break (1, 0);
+                break 1;
             }
 
             ball.update();
@@ -110,8 +116,11 @@ fn main() -> ! {
 
             disp.flush().unwrap();
         };
-        p1_score += p1_points;
-        p2_score += p2_points;
+        match last_winner_id {
+            1 => p1_score += 1,
+            2 => p2_score += 1,
+            _ => {}
+        };
     }
 }
 
@@ -178,12 +187,12 @@ struct Ball {
 }
 
 impl Ball {
-    fn new() -> Self {
+    fn new(vx: i8) -> Self {
         Ball {
             radius: 3,
             x: SCREEN_WIDTH / 2,
             y: SCREEN_HEIGHT / 2,
-            vx: 2,
+            vx: vx,
             vy: 1,
         }
     }
