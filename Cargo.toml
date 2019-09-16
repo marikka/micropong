@@ -20,6 +20,7 @@ embedded-hal = {version = "0.2.3", features = ["unproven"]}
 ssd1306 = {version ="0.2.6", features=["graphics"]}
 embedded-graphics = "0.4.5"
 arrayvec = {version ="0.4.11", default-features=false}
+libm = "0.1.4"
 
 # this lets you use `cargo fix`!
 [[bin]]
