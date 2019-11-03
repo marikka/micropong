@@ -47,8 +47,8 @@ fn main() -> ! {
 
     loop {
         let vx = match last_winner_id {
-            1 => 2.0,
-            _ => -2.0,
+            1 => 1.5,
+            _ => -1.5,
         };
 
         let mut ball = Ball::new(vx);
@@ -231,7 +231,7 @@ impl Ball {
     }
 
     fn bounce(&mut self, collision_position: f32) {
-        self.vx = -self.vx * 1.01;
+        self.vx = -self.vx * 1.015;
         self.vy = -collision_position;
     }
 
