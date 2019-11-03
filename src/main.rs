@@ -234,7 +234,7 @@ impl Ball {
     }
 
     fn bounce(&mut self, collision_position: f32) {
-        self.vx = -self.vx;
+        self.vx = -self.vx * 1.01;
         self.vy = -collision_position;
     }
 
