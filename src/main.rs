@@ -261,6 +261,9 @@ fn config_hardware() -> (
 
     cortex_m::interrupt::free(move |cs| {
         let mut rcc = p.RCC.configure().sysclk(8.mhz()).freeze(&mut p.FLASH);
+        let mut delay = Delay::new(cp.SYST, &rcc);
+
+        delay.delay_ms(100u32);
 
         let gpiob = p.GPIOB.split(&mut rcc);
         let scl = gpiob.pb6.into_alternate_af1(cs); //D5
