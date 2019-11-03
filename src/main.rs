@@ -211,10 +211,9 @@ impl Ball {
     }
 
     fn test_collision(&self, player: &Player) -> f32 {
-        let hit_area = PADDLE_WIDTH as f32 / 2.0 + self.radius / 2.0;
-        let paddle_center = player.paddle_position + hit_area;
+        let paddle_center = player.paddle_position + PADDLE_WIDTH as f32 / 2.0;
         let diff = paddle_center - self.y;
-        (diff / hit_area)
+        (diff / PADDLE_WIDTH as f32)
     }
 
     fn is_at_end(&self, end: End) -> bool {
