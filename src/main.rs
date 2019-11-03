@@ -201,7 +201,7 @@ impl Ball {
     }
 
     fn update(&mut self) {
-        if self.y >= (SCREEN_HEIGHT as f32 - self.radius) || self.y < self.radius {
+        if self.y >= (SCREEN_HEIGHT as f32 - (self.radius + 1.0)) || self.y < self.radius {
             self.vy = -self.vy;
         }
 
