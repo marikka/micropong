@@ -28,6 +28,9 @@ const PADDLE_WIDTH: u8 = 8;
 const SCREEN_WIDTH: u8 = 128;
 const SCREEN_HEIGHT: u8 = 32;
 const SCORE_SCREEN_DELAY_MS: u16 = 2000;
+const BOOT_DELAY_MS: u32 = 100;
+const INITIAL_VELOCITY: f32 = 1.5;
+const ACCELERATION_ON_BOUNCE: f32 = 1.015;
 
 #[entry]
 fn main() -> ! {
@@ -47,8 +50,8 @@ fn main() -> ! {
 
     loop {
         let vx = match last_winner_id {
-            1 => 1.5,
-            _ => -1.5,
+            1 => INITIAL_VELOCITY,
+            _ => -INITIAL_VELOCITY,
         };
 
         let mut ball = Ball::new(vx);
@@ -193,7 +196,7 @@ impl Ball {
             radius: 3.0,
             x: SCREEN_WIDTH as f32 / 2.0,
             y: SCREEN_HEIGHT as f32 / 2.0,
-            vx: vx,
+            vx,
             vy: 0.1,
         }
     }
@@ -231,7 +234,7 @@ impl Ball {
     }
 
     fn bounce(&mut self, collision_position: f32) {
-        self.vx = -self.vx * 1.015;
+        self.vx = -self.vx * ACCELERATION_ON_BOUNCE;
         self.vy = -collision_position;
     }
 
@@ -260,7 +263,7 @@ fn config_hardware() -> (
         let mut rcc = p.RCC.configure().sysclk(8.mhz()).freeze(&mut p.FLASH);
         let mut delay = Delay::new(cp.SYST, &rcc);
 
-        delay.delay_ms(100u32);
+        delay.delay_ms(BOOT_DELAY_MS);
 
         let gpiob = p.GPIOB.split(&mut rcc);
         let scl = gpiob.pb6.into_alternate_af1(cs); //D5
@@ -278,11 +281,11 @@ fn config_hardware() -> (
         //let t7 = gpioa.pa15.into_pull_up_input(cs);
         let t8 = gpiob.pb3.into_pull_up_input(cs);
 
-        let p1_t1 = t3; // OK PA2
-        let p1_t2 = t5; // OK PA8
+        let p1_t1 = t3; // PA2
+        let p1_t2 = t5; // PA8
 
-        let p2_t1 = t4; //OK PA5
-        let p2_t2 = t8; //OK PB3
+        let p2_t1 = t4; // PA5
+        let p2_t2 = t8; // PB3
 
         let i2c = I2c::i2c1(p.I2C1, (scl, sda), 400.khz(), &mut rcc);
 
