@@ -75,19 +75,17 @@ fn main() -> ! {
                 let collision_position = ball.test_collision(&player_1);
                 if collision_position.abs() <= 1.0 {
                     ball.bounce(collision_position);
+                } else if ball.is_at_end(End::Left) {
+                    break 2;
                 }
             }
             if ball.is_at_paddle(End::Right) {
                 let collision_position = ball.test_collision(&player_2);
                 if collision_position.abs() <= 1.0 {
                     ball.bounce(collision_position);
+                } else if ball.is_at_end(End::Right) {
+                    break 1;
                 }
-            }
-            if ball.is_at_end(End::Left) {
-                break 2;
-            }
-            if ball.is_at_end(End::Right) {
-                break 1;
             }
 
             ball.update();
