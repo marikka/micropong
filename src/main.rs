@@ -269,14 +269,23 @@ fn config_hardware() -> (
         let scl = gpiob.pb6.into_alternate_af1(cs); //D5
         let sda = gpiob.pb7.into_alternate_af1(cs); //D4
 
-        let p1_t1 = gpiob.pb0.into_pull_up_input(cs); //D3
-        let p1_t2 = gpiob.pb1.into_pull_up_input(cs); //D6
-
         let gpioa = p.GPIOA.split(&mut rcc);
-        let p2_t1 = gpioa.pa2.into_pull_up_input(cs); //A7
-        let p2_t2 = gpioa.pa7.into_pull_up_input(cs); //A6
 
-        let delay = Delay::new(cp.SYST, &rcc);
+        //let t1 = gpioa.pa0.into_pull_up_input(cs);
+        //let t2 = gpioa.pa1.into_pull_up_input(cs);
+        let t3 = gpioa.pa2.into_pull_up_input(cs);
+        let t4 = gpioa.pa5.into_pull_up_input(cs);
+
+        let t5 = gpioa.pa8.into_pull_up_input(cs);
+        //let t6 = gpioa.pa9.into_pull_up_input(cs);
+        //let t7 = gpioa.pa15.into_pull_up_input(cs);
+        let t8 = gpiob.pb3.into_pull_up_input(cs);
+
+        let p1_t1 = t3; // OK PA2
+        let p1_t2 = t5; // OK PA8
+
+        let p2_t1 = t4; //OK PA5
+        let p2_t2 = t8; //OK PB3
 
         let i2c = I2c::i2c1(p.I2C1, (scl, sda), 400.khz(), &mut rcc);
 
