@@ -17,11 +17,11 @@ use ssd1306::Builder;
 
 const BOOT_DELAY_MS: u32 = 100;
 
-mod pong;
+mod tetris;
 
 #[entry]
 fn main() -> ! {
-    let (delay, i2c, p1_t1, p1_t2, p2_t1, p2_t2) = config_hardware();
+    let (mut delay, i2c, mut p1_t1, mut p1_t2, mut p2_t1, mut p2_t2) = config_hardware();
 
     let mut disp: GraphicsMode<_> = Builder::new()
         .with_size(DisplaySize::Display128x32)
@@ -30,7 +30,10 @@ fn main() -> ! {
     disp.init().unwrap();
     disp.flush().unwrap();
 
-    pong::pong(disp, delay, p1_t1, p1_t2, p2_t1, p2_t2);
+    tetris::tetris(
+        &mut disp, &mut delay, &mut p1_t1, &mut p1_t2, &mut p2_t1, &mut p2_t2,
+    );
+
     loop {}
 }
 
