@@ -100,6 +100,14 @@ pub fn tetris<E: core::fmt::Debug, GM: ssd1306::interface::DisplayInterface<Erro
 
             disp.clear();
 
+            for y in 0..GRID_HEIGHT {
+                for x in 0..GRID_WIDTH {
+                    if grid[y][x] > 0 {
+                        disp.draw(block_drawable(y, x));
+                    }
+                }
+            }
+
             disp.draw(tetromino_drawable(
                 current_tetromino.x,
                 current_tetromino.y,
@@ -110,10 +118,23 @@ pub fn tetris<E: core::fmt::Debug, GM: ssd1306::interface::DisplayInterface<Erro
 
             delay.delay_ms(50u16);
 
-            current_tetromino.y += 1;
-            if current_tetromino.y >= GRID_HEIGHT {
+            if current_tetromino.y >= GRID_HEIGHT - 4
+                || test_collision(
+                    current_tetromino.x,
+                    current_tetromino.y + 1,
+                    current_tetromino.typ,
+                    grid,
+                )
+            {
+                draw_tetromino_on_grid(
+                    current_tetromino.x,
+                    current_tetromino.y,
+                    current_tetromino.typ,
+                    &mut grid,
+                );
                 break;
             }
+            current_tetromino.y += 1;
         }
     }
 }
@@ -138,6 +159,15 @@ fn tetromino_drawable(
         .flat_map(|e| e)
 }
 
+fn draw_tetromino_on_grid(x0: usize, y0: usize, t_type: TetrominoType, g: &mut Grid) {
+    let t = TETROMINOES[t_type as usize];
+    for y in 0..4 {
+        for x in 0..2 {
+            g[y0 + y][x0 + x] |= t[y][x];
+        }
+    }
+}
+
 fn block_drawable(y: usize, x: usize) -> impl Iterator<Item = Pixel<PixelColorU8>> {
     let x_display = y as i32 * BLOCK_SIZE;
     let y_display = x as i32 * BLOCK_SIZE;
@@ -147,4 +177,16 @@ fn block_drawable(y: usize, x: usize) -> impl Iterator<Item = Pixel<PixelColorU8
     )
     .with_stroke(Some(1u8.into()))
     .into_iter()
+}
+
+fn test_collision(x0: usize, y0: usize, t_type: TetrominoType, g: Grid) -> bool {
+    let t = TETROMINOES[t_type as usize];
+    for y in 0..4 {
+        for x in 0..2 {
+            if g[y0 + y][x0 + x] == 1 && t[y][x] == 1 {
+                return true;
+            }
+        }
+    }
+    false
 }
