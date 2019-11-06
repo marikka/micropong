@@ -5,17 +5,14 @@ use embedded_hal::digital::v2::InputPin;
 
 use embedded_graphics::pixelcolor::PixelColorU8;
 use embedded_graphics::prelude::*;
-use embedded_graphics::primitives::{Circle, Rect};
+use embedded_graphics::primitives::Rect;
 use ssd1306::prelude::*;
 
 extern crate wyhash;
 use wyhash::wyrng;
 
-use arrayvec::ArrayString;
-use core::fmt::Write;
 const SCREEN_WIDTH: u8 = 128;
 const SCREEN_HEIGHT: u8 = 32;
-const SCORE_SCREEN_DELAY_MS: u16 = 2000;
 const GRID_WIDTH: usize = 10;
 const GRID_HEIGHT: usize = 40;
 const BLOCK_SIZE: i32 = 3;
@@ -67,6 +64,32 @@ struct Tetromino {
     typ: TetrominoType,
 }
 
+impl Tetromino {
+    fn can_move_right(&mut self, grid: &Grid) -> bool {
+        !test_collision(self.x + 1, self.y, self.typ, grid)
+    }
+
+    fn can_move_left(&mut self, grid: &Grid) -> bool {
+        !test_collision(self.x - 1, self.y, self.typ, grid)
+    }
+
+    fn can_move_down(&mut self, grid: &Grid) -> bool {
+        !test_collision(self.x, self.y + 1, self.typ, grid)
+    }
+
+    fn move_left(&mut self, grid: &Grid) {
+        if self.can_move_left(grid) {
+            self.x -= 1;
+        }
+    }
+
+    fn move_right(&mut self, grid: &Grid) {
+        if self.can_move_right(grid) {
+            self.x += 1;
+        }
+    }
+}
+
 pub fn tetris<E: core::fmt::Debug, GM: ssd1306::interface::DisplayInterface<Error = E>>(
     disp: &mut GraphicsMode<GM>,
     delay: &mut Delay,
@@ -93,8 +116,8 @@ pub fn tetris<E: core::fmt::Debug, GM: ssd1306::interface::DisplayInterface<Erro
                 current_tetromino.x > 0,
                 current_tetromino.x < GRID_WIDTH,
             ) {
-                (Ok(true), _, true, _) => current_tetromino.x -= 1,
-                (_, Ok(true), _, true) => current_tetromino.x += 1,
+                (Ok(true), _, true, _) => current_tetromino.move_left(&grid),
+                (_, Ok(true), _, true) => current_tetromino.move_right(&grid),
                 _ => {}
             }
 
@@ -118,14 +141,7 @@ pub fn tetris<E: core::fmt::Debug, GM: ssd1306::interface::DisplayInterface<Erro
 
             delay.delay_ms(50u16);
 
-            if current_tetromino.y >= GRID_HEIGHT - 4
-                || test_collision(
-                    current_tetromino.x,
-                    current_tetromino.y + 1,
-                    current_tetromino.typ,
-                    grid,
-                )
-            {
+            if current_tetromino.y >= GRID_HEIGHT - 4 || !current_tetromino.can_move_down(&grid) {
                 draw_tetromino_on_grid(
                     current_tetromino.x,
                     current_tetromino.y,
@@ -179,7 +195,7 @@ fn block_drawable(y: usize, x: usize) -> impl Iterator<Item = Pixel<PixelColorU8
     .into_iter()
 }
 
-fn test_collision(x0: usize, y0: usize, t_type: TetrominoType, g: Grid) -> bool {
+fn test_collision(x0: usize, y0: usize, t_type: TetrominoType, g: &Grid) -> bool {
     let t = TETROMINOES[t_type as usize];
     for y in 0..4 {
         for x in 0..2 {
