@@ -11,6 +11,8 @@ use ssd1306::prelude::*;
 extern crate wyhash;
 use wyhash::wyrng;
 
+//use cortex_m_semihosting::hprintln;
+
 const SCREEN_WIDTH: u8 = 128;
 const SCREEN_HEIGHT: u8 = 32;
 const GRID_WIDTH: usize = 10;
@@ -110,14 +112,9 @@ pub fn tetris<E: core::fmt::Debug, GM: ssd1306::interface::DisplayInterface<Erro
         let mut current_tetromino = Tetromino { x: 5, y: 0, typ };
 
         loop {
-            match (
-                p2_t1.is_low(),
-                p2_t2.is_low(),
-                current_tetromino.x > 0,
-                current_tetromino.x < GRID_WIDTH,
-            ) {
-                (Ok(true), _, true, _) => current_tetromino.move_left(&grid),
-                (_, Ok(true), _, true) => current_tetromino.move_right(&grid),
+            match (p2_t1.is_low(), p2_t2.is_low()) {
+                (Ok(true), _) => current_tetromino.move_left(&grid),
+                (_, Ok(true)) => current_tetromino.move_right(&grid),
                 _ => {}
             }
 
@@ -199,7 +196,13 @@ fn test_collision(x0: usize, y0: usize, t_type: TetrominoType, g: &Grid) -> bool
     let t = TETROMINOES[t_type as usize];
     for y in 0..4 {
         for x in 0..2 {
-            if g[y0 + y][x0 + x] == 1 && t[y][x] == 1 {
+            let yi = y0 + y;
+            let xi = x0 + x;
+            if yi > 0 && yi < GRID_HEIGHT && xi > 0 && xi < GRID_WIDTH {
+                if g[yi][xi] == 1 && t[y][x] == 1 {
+                    return true;
+                };
+            } else {
                 return true;
             }
         }
