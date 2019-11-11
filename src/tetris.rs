@@ -177,7 +177,11 @@ fn draw_tetromino_on_grid(x0: usize, y0: usize, t_type: TetrominoType, g: &mut G
     let t = TETROMINOES[t_type as usize];
     for y in 0..4 {
         for x in 0..2 {
-            g[y0 + y][x0 + x] |= t[y][x];
+            let yi = y0 + y;
+            let xi = x0 + x;
+            if yi > 0 && yi < GRID_HEIGHT && xi > 0 && xi < GRID_WIDTH {
+                g[yi][xi] |= t[y][x];
+            }
         }
     }
 }
@@ -199,12 +203,15 @@ fn test_collision(x0: usize, y0: usize, t_type: TetrominoType, g: &Grid) -> bool
         for x in 0..2 {
             let yi = y0 + y;
             let xi = x0 + x;
-            if yi > 0 && yi < GRID_HEIGHT && xi > 0 && xi < GRID_WIDTH {
-                if g[yi][xi] == 1 && t[y][x] == 1 {
+
+            if t[y][x] == 1 {
+                if yi > 0 && yi < GRID_HEIGHT && xi > 0 && xi < GRID_WIDTH {
+                    if g[yi][xi] == 1 {
+                        return true;
+                    }
+                } else {
                     return true;
-                };
-            } else {
-                return true;
+                }
             }
         }
     }
