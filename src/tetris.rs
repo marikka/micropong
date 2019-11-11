@@ -18,6 +18,7 @@ const SCREEN_HEIGHT: u8 = 32;
 const GRID_WIDTH: usize = 10;
 const GRID_HEIGHT: usize = 40;
 const BLOCK_SIZE: i32 = 3;
+const MARGIN_X: i32 = (SCREEN_HEIGHT as i32 - BLOCK_SIZE * GRID_WIDTH as i32) / 2;
 const NUM_TETROMINOES: usize = 7;
 
 static I: TetrominoData = [[1, 0], [1, 0], [1, 0], [1, 0]];
@@ -113,8 +114,8 @@ pub fn tetris<E: core::fmt::Debug, GM: ssd1306::interface::DisplayInterface<Erro
 
         loop {
             match (p2_t1.is_low(), p2_t2.is_low()) {
-                (Ok(true), _) => current_tetromino.move_left(&grid),
-                (_, Ok(true)) => current_tetromino.move_right(&grid),
+                (_, Ok(true)) => current_tetromino.move_left(&grid),
+                (Ok(true), _) => current_tetromino.move_right(&grid),
                 _ => {}
             }
 
@@ -183,7 +184,7 @@ fn draw_tetromino_on_grid(x0: usize, y0: usize, t_type: TetrominoType, g: &mut G
 
 fn block_drawable(y: usize, x: usize) -> impl Iterator<Item = Pixel<PixelColorU8>> {
     let x_display = y as i32 * BLOCK_SIZE;
-    let y_display = x as i32 * BLOCK_SIZE;
+    let y_display = SCREEN_HEIGHT as i32 - (x as i32 * BLOCK_SIZE) - MARGIN_X;
     Rect::new(
         Coord::new(x_display, y_display),
         Coord::new(x_display + BLOCK_SIZE, y_display + BLOCK_SIZE),
