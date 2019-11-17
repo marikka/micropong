@@ -216,7 +216,7 @@ fn block_drawable(y: i32, x: i32) -> impl Iterator<Item = Pixel<PixelColorU8>> {
     let y_display = SCREEN_HEIGHT as i32 - (x as i32 * BLOCK_SIZE) - MARGIN_X;
     Rect::new(
         Coord::new(x_display, y_display),
-        Coord::new(x_display + BLOCK_SIZE, y_display + BLOCK_SIZE),
+        Coord::new(x_display + BLOCK_SIZE - 1, y_display + BLOCK_SIZE - 1),
     )
     .with_stroke(Some(1u8.into()))
     .into_iter()
