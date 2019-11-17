@@ -21,7 +21,8 @@ mod tetris;
 
 #[entry]
 fn main() -> ! {
-    let (mut delay, i2c, mut p1_t1, mut p1_t2, mut p2_t1, mut p2_t2) = config_hardware();
+    let (mut delay, i2c, mut p1_t1, mut p1_t2, mut p2_t1, mut p2_t2, mut p2_t3, mut p2_t4) =
+        config_hardware();
 
     let mut disp: GraphicsMode<_> = Builder::new()
         .with_size(DisplaySize::Display128x32)
@@ -31,7 +32,8 @@ fn main() -> ! {
     disp.flush().unwrap();
 
     tetris::tetris(
-        &mut disp, &mut delay, &mut p1_t1, &mut p1_t2, &mut p2_t1, &mut p2_t2,
+        &mut disp, &mut delay, &mut p1_t1, &mut p1_t2, &mut p2_t1, &mut p2_t2, &mut p2_t3,
+        &mut p2_t4,
     );
 
     loop {}
@@ -40,6 +42,8 @@ fn main() -> ! {
 fn config_hardware() -> (
     Delay,
     I2c<I2C1, PB6<Alternate<AF1>>, PB7<Alternate<AF1>>>,
+    impl InputPin<Error = ()>,
+    impl InputPin<Error = ()>,
     impl InputPin<Error = ()>,
     impl InputPin<Error = ()>,
     impl InputPin<Error = ()>,
@@ -60,14 +64,14 @@ fn config_hardware() -> (
 
         let gpioa = p.GPIOA.split(&mut rcc);
 
-        //let t1 = gpioa.pa0.into_pull_up_input(cs);
+        let t1 = gpioa.pa0.into_pull_up_input(cs);
         //let t2 = gpioa.pa1.into_pull_up_input(cs);
         let t3 = gpioa.pa2.into_pull_up_input(cs);
         let t4 = gpioa.pa5.into_pull_up_input(cs);
 
         let t5 = gpioa.pa8.into_pull_up_input(cs);
         //let t6 = gpioa.pa9.into_pull_up_input(cs);
-        //let t7 = gpioa.pa15.into_pull_up_input(cs);
+        let t7 = gpioa.pa15.into_pull_up_input(cs);
         let t8 = gpiob.pb3.into_pull_up_input(cs);
 
         let p1_t1 = t3; // PA2
@@ -75,9 +79,11 @@ fn config_hardware() -> (
 
         let p2_t1 = t4; // PA5
         let p2_t2 = t8; // PB3
+        let p2_t3 = t1;
+        let p2_t4 = t7;
 
         let i2c = I2c::i2c1(p.I2C1, (scl, sda), 400.khz(), &mut rcc);
 
-        (delay, i2c, p1_t1, p1_t2, p2_t1, p2_t2)
+        (delay, i2c, p1_t1, p1_t2, p2_t1, p2_t2, p2_t3, p2_t4)
     })
 }

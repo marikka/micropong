@@ -21,15 +21,48 @@ const BLOCK_SIZE: i32 = 4;
 const MARGIN_X: i32 = (SCREEN_HEIGHT as i32 - BLOCK_SIZE * GRID_WIDTH as i32) / 2 + BLOCK_SIZE;
 const NUM_TETROMINOES: usize = 7;
 
-static I: TetrominoData = [[1, 0], [1, 0], [1, 0], [1, 0]];
-static T: TetrominoData = [[1, 0], [1, 1], [1, 0], [0, 0]];
-static S: TetrominoData = [[1, 0], [1, 1], [0, 1], [0, 0]];
-static Z: TetrominoData = [[0, 1], [1, 1], [1, 0], [0, 0]];
-static O: TetrominoData = [[1, 1], [1, 1], [0, 0], [0, 0]];
-static L: TetrominoData = [[1, 0], [1, 0], [1, 1], [0, 0]];
-static J: TetrominoData = [[0, 1], [0, 1], [1, 1], [0, 0]];
+//
+static I0: [[u8; 4]; 4] = [[0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]];
+static I1: [[u8; 4]; 4] = [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]];
+static I2: [[u8; 4]; 4] = [[0, 0, 0, 0], [0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0]];
+static I3: [[u8; 4]; 4] = [[0, 1, 0, 0], [0, 1, 0, 0], [0, 1, 0, 0], [0, 1, 0, 0]];
+static I: [[[u8; 4]; 4]; 4] = [I0, I1, I2, I3];
 
-static TETROMINOES: [TetrominoData; NUM_TETROMINOES] = [I, T, S, Z, O, L, J];
+static J0: [[u8; 3]; 3] = [[1, 0, 0], [1, 1, 1], [0, 0, 0]];
+static J1: [[u8; 3]; 3] = [[0, 1, 1], [0, 1, 0], [0, 1, 0]];
+static J2: [[u8; 3]; 3] = [[0, 0, 0], [1, 1, 1], [0, 0, 1]];
+static J3: [[u8; 3]; 3] = [[0, 1, 0], [0, 1, 0], [1, 1, 0]];
+static J: [[[u8; 3]; 3]; 4] = [J0, J1, J2, J3];
+
+static L0: [[u8; 3]; 3] = [[0, 0, 1], [1, 1, 1], [0, 0, 0]];
+static L1: [[u8; 3]; 3] = [[0, 1, 0], [0, 1, 0], [0, 1, 1]];
+static L2: [[u8; 3]; 3] = [[0, 0, 0], [1, 1, 1], [1, 0, 0]];
+static L3: [[u8; 3]; 3] = [[1, 1, 0], [0, 1, 0], [0, 1, 0]];
+static L: [[[u8; 3]; 3]; 4] = [L0, L1, L2, L3];
+
+static O0: [[u8; 4]; 3] = [[0, 1, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]];
+static O1: [[u8; 4]; 3] = [[0, 1, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]];
+static O2: [[u8; 4]; 3] = [[0, 1, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]];
+static O3: [[u8; 4]; 3] = [[0, 1, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]];
+static O: [[[u8; 4]; 3]; 4] = [O0, O1, O2, O3];
+
+static S0: [[u8; 3]; 3] = [[0, 1, 1], [1, 1, 0], [0, 0, 0]];
+static S1: [[u8; 3]; 3] = [[0, 1, 0], [0, 1, 1], [0, 0, 1]];
+static S2: [[u8; 3]; 3] = [[0, 0, 0], [0, 1, 1], [1, 1, 0]];
+static S3: [[u8; 3]; 3] = [[1, 0, 0], [1, 1, 0], [0, 1, 0]];
+static S: [[[u8; 3]; 3]; 4] = [S0, S1, S2, S3];
+
+static T0: [[u8; 3]; 3] = [[0, 1, 0], [1, 1, 1], [0, 0, 0]];
+static T1: [[u8; 3]; 3] = [[0, 1, 0], [0, 1, 1], [0, 1, 0]];
+static T2: [[u8; 3]; 3] = [[0, 0, 0], [1, 1, 1], [0, 1, 0]];
+static T3: [[u8; 3]; 3] = [[0, 1, 0], [1, 1, 0], [0, 1, 0]];
+static T: [[[u8; 3]; 3]; 4] = [T0, T1, T2, T3];
+
+static Z0: [[u8; 3]; 3] = [[1, 1, 0], [0, 1, 1], [0, 0, 0]];
+static Z1: [[u8; 3]; 3] = [[0, 0, 1], [0, 1, 1], [0, 1, 0]];
+static Z2: [[u8; 3]; 3] = [[0, 0, 0], [1, 1, 0], [0, 1, 1]];
+static Z3: [[u8; 3]; 3] = [[0, 1, 0], [1, 1, 0], [1, 0, 0]];
+static Z: [[[u8; 3]; 3]; 4] = [Z0, Z1, Z2, Z3];
 
 #[derive(Clone, Copy)]
 enum TetrominoType {
@@ -59,25 +92,25 @@ impl From<i32> for TetrominoType {
 
 type Grid = [[usize; GRID_WIDTH]; GRID_HEIGHT];
 
-type TetrominoData = [[usize; 2]; 4];
-
+#[derive(Clone, Copy)]
 struct Tetromino {
     x: i32,
     y: i32,
     typ: TetrominoType,
+    rotation: usize,
 }
 
 impl Tetromino {
     fn can_move_right(&mut self, grid: &Grid) -> bool {
-        !test_collision(self.x + 1, self.y, self.typ, grid)
+        !test_collision(self.x + 1, self.y, self, grid)
     }
 
     fn can_move_left(&mut self, grid: &Grid) -> bool {
-        !test_collision(self.x - 1, self.y, self.typ, grid)
+        !test_collision(self.x - 1, self.y, self, grid)
     }
 
     fn can_move_down(&mut self, grid: &Grid) -> bool {
-        !test_collision(self.x, self.y + 1, self.typ, grid)
+        !test_collision(self.x, self.y + 1, self, grid)
     }
 
     fn move_left(&mut self, grid: &Grid) {
@@ -91,6 +124,62 @@ impl Tetromino {
             self.x += 1;
         }
     }
+
+    fn rotate_left(&mut self) {
+        self.rotation = if self.rotation == 0 {
+            3
+        } else {
+            self.rotation - 1
+        }
+    }
+
+    fn rotate_right(&mut self) {
+        self.rotation = if self.rotation == 3 {
+            0
+        } else {
+            self.rotation + 1
+        }
+    }
+
+    fn get_data(&self, y: usize, x: usize) -> u8 {
+        if y > 3 || x > 3 {
+            return 0;
+        }
+
+        match self.typ {
+            TetrominoType::I => I[self.rotation][y][x],
+            TetrominoType::J => J[self.rotation][y][x],
+            TetrominoType::L => L[self.rotation][y][x],
+            TetrominoType::O => O[self.rotation][y][x],
+            TetrominoType::S => S[self.rotation][y][x],
+            TetrominoType::T => T[self.rotation][y][x],
+            TetrominoType::Z => Z[self.rotation][y][x],
+        }
+    }
+
+    fn h(&self) -> usize {
+        match self.typ {
+            TetrominoType::I => 4,
+            TetrominoType::J => 3,
+            TetrominoType::L => 3,
+            TetrominoType::O => 3,
+            TetrominoType::S => 3,
+            TetrominoType::T => 3,
+            TetrominoType::Z => 3,
+        }
+    }
+
+    fn w(&self) -> usize {
+        match self.typ {
+            TetrominoType::I => 4,
+            TetrominoType::J => 3,
+            TetrominoType::L => 3,
+            TetrominoType::O => 4,
+            TetrominoType::S => 3,
+            TetrominoType::T => 3,
+            TetrominoType::Z => 3,
+        }
+    }
 }
 
 pub fn tetris<E: core::fmt::Debug, GM: ssd1306::interface::DisplayInterface<Error = E>>(
@@ -100,6 +189,8 @@ pub fn tetris<E: core::fmt::Debug, GM: ssd1306::interface::DisplayInterface<Erro
     p1_t2: &mut impl InputPin<Error = ()>,
     p2_t1: &mut impl InputPin<Error = ()>,
     p2_t2: &mut impl InputPin<Error = ()>,
+    p2_t3: &mut impl InputPin<Error = ()>,
+    p2_t4: &mut impl InputPin<Error = ()>,
 ) {
     let mut seed = 3;
     'game: loop {
@@ -111,12 +202,23 @@ pub fn tetris<E: core::fmt::Debug, GM: ssd1306::interface::DisplayInterface<Erro
             }
 
             let typ = TetrominoType::from((wyrng(&mut seed) % NUM_TETROMINOES as u64) as i32);
-            let mut current_tetromino = Tetromino { x: 4, y: 0, typ };
+            let mut current_tetromino = Tetromino {
+                x: 4,
+                y: 0,
+                typ,
+                rotation: 0,
+            };
 
             'row: loop {
                 match (p2_t1.is_low(), p2_t2.is_low()) {
                     (_, Ok(true)) => current_tetromino.move_left(&grid),
                     (Ok(true), _) => current_tetromino.move_right(&grid),
+                    _ => {}
+                }
+
+                match (p2_t3.is_low(), p2_t4.is_low()) {
+                    (_, Ok(true)) => current_tetromino.rotate_left(),
+                    (Ok(true), _) => current_tetromino.rotate_right(),
                     _ => {}
                 }
 
@@ -130,26 +232,17 @@ pub fn tetris<E: core::fmt::Debug, GM: ssd1306::interface::DisplayInterface<Erro
                     }
                 }
 
-                disp.draw(tetromino_drawable(
-                    current_tetromino.x,
-                    current_tetromino.y,
-                    current_tetromino.typ,
-                ));
+                disp.draw(tetromino_drawable(&current_tetromino));
 
                 disp.flush().unwrap();
 
-                delay.delay_ms(30u16);
+                delay.delay_ms(60u16);
 
                 if current_tetromino.y >= GRID_HEIGHT as i32 - 4
                     || !current_tetromino.can_move_down(&grid)
                 {
                     if current_tetromino.y > 5 {
-                        draw_tetromino_on_grid(
-                            current_tetromino.x,
-                            current_tetromino.y,
-                            current_tetromino.typ,
-                            &mut grid,
-                        );
+                        draw_tetromino_on_grid(&current_tetromino, &mut grid);
                         break;
                     } else {
                         continue 'game;
@@ -178,19 +271,16 @@ pub fn tetris<E: core::fmt::Debug, GM: ssd1306::interface::DisplayInterface<Erro
     }
 }
 
-fn tetromino_drawable(
-    x0: i32,
-    y0: i32,
-    t_type: TetrominoType,
-) -> impl Iterator<Item = Pixel<PixelColorU8>> {
-    let t = TETROMINOES[t_type as usize];
-
-    (0..4)
+fn tetromino_drawable(t: &Tetromino) -> impl Iterator<Item = Pixel<PixelColorU8>> {
+    let tc = t.clone();
+    let w = tc.w();
+    let h = tc.h();
+    (0..h)
         .into_iter()
-        .flat_map(|e| core::iter::repeat(e).zip((0..2).into_iter()))
+        .flat_map(move |e| core::iter::repeat(e).zip((0..w).into_iter()))
         .filter_map(move |(y, x)| {
-            if t[y][x] > 0 {
-                Some(block_drawable(y0 + y as i32, x0 + x as i32))
+            if tc.get_data(y, x) > 0 {
+                Some(block_drawable(tc.y + y as i32, tc.x + x as i32))
             } else {
                 None
             }
@@ -198,14 +288,13 @@ fn tetromino_drawable(
         .flat_map(|e| e)
 }
 
-fn draw_tetromino_on_grid(x0: i32, y0: i32, t_type: TetrominoType, g: &mut Grid) {
-    let t = TETROMINOES[t_type as usize];
-    for y in 0..4 {
-        for x in 0..2 {
-            let yi = y0 + y;
-            let xi = x0 + x;
+fn draw_tetromino_on_grid(t: &Tetromino, g: &mut Grid) {
+    for y in 0..t.h() {
+        for x in 0..t.w() {
+            let yi = t.y + y as i32;
+            let xi = t.x + x as i32;
             if yi > 0 && yi < GRID_HEIGHT as i32 && xi >= 0 && xi < GRID_WIDTH as i32 {
-                g[yi as usize][xi as usize] |= t[y as usize][x as usize];
+                g[yi as usize][xi as usize] |= t.get_data(y as usize, x as usize) as usize;
             }
         }
     }
@@ -222,14 +311,13 @@ fn block_drawable(y: i32, x: i32) -> impl Iterator<Item = Pixel<PixelColorU8>> {
     .into_iter()
 }
 
-fn test_collision(x0: i32, y0: i32, t_type: TetrominoType, g: &Grid) -> bool {
-    let t = TETROMINOES[t_type as usize];
-    for y in 0..4 as usize {
-        for x in 0..2 as usize {
+fn test_collision(x0: i32, y0: i32, t: &Tetromino, g: &Grid) -> bool {
+    for y in 0..t.h() as usize {
+        for x in 0..t.w() as usize {
             let yi = y0 + y as i32;
             let xi = x0 + x as i32;
 
-            if t[y][x] == 1 {
+            if t.get_data(y, x) == 1 {
                 if yi > 0 && yi < GRID_HEIGHT as i32 && xi >= 0 && xi < GRID_WIDTH as i32 {
                     if g[yi as usize][xi as usize] == 1 {
                         return true;
