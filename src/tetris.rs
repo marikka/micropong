@@ -101,73 +101,79 @@ pub fn tetris<E: core::fmt::Debug, GM: ssd1306::interface::DisplayInterface<Erro
     p2_t1: &mut impl InputPin<Error = ()>,
     p2_t2: &mut impl InputPin<Error = ()>,
 ) {
-    let mut grid: Grid = [[0; GRID_WIDTH]; GRID_HEIGHT];
     let mut seed = 3;
+    'game: loop {
+        let mut grid: Grid = [[0; GRID_WIDTH]; GRID_HEIGHT];
 
-    loop {
-        if let (Ok(true), Ok(true)) = (p1_t1.is_low(), p1_t2.is_low()) {
-            break;
-        }
-
-        let typ = TetrominoType::from((wyrng(&mut seed) % NUM_TETROMINOES as u64) as i32);
-        let mut current_tetromino = Tetromino { x: 5, y: 0, typ };
-
-        loop {
-            match (p2_t1.is_low(), p2_t2.is_low()) {
-                (_, Ok(true)) => current_tetromino.move_left(&grid),
-                (Ok(true), _) => current_tetromino.move_right(&grid),
-                _ => {}
-            }
-
-            disp.clear();
-
-            for y in 0..GRID_HEIGHT {
-                for x in 0..GRID_WIDTH {
-                    if grid[y][x] > 0 {
-                        disp.draw(block_drawable(y as i32, x as i32));
-                    }
-                }
-            }
-
-            disp.draw(tetromino_drawable(
-                current_tetromino.x,
-                current_tetromino.y,
-                current_tetromino.typ,
-            ));
-
-            disp.flush().unwrap();
-
-            delay.delay_ms(30u16);
-
-            if current_tetromino.y >= GRID_HEIGHT as i32 - 4
-                || !current_tetromino.can_move_down(&grid)
-            {
-                draw_tetromino_on_grid(
-                    current_tetromino.x,
-                    current_tetromino.y,
-                    current_tetromino.typ,
-                    &mut grid,
-                );
+        'tetromino: loop {
+            if let (Ok(true), Ok(true)) = (p1_t1.is_low(), p1_t2.is_low()) {
                 break;
             }
 
-            for y in 0..grid.len() {
-                if grid[y].iter().all(|&x| x > 0) {
-                    //Erase row
-                    for x in grid[y].iter_mut() {
-                        *x = 0;
-                    }
+            let typ = TetrominoType::from((wyrng(&mut seed) % NUM_TETROMINOES as u64) as i32);
+            let mut current_tetromino = Tetromino { x: 4, y: 0, typ };
 
-                    //Move each above erased row down
-                    for yy in (0..y).rev() {
-                        for x in 0..grid[yy].len() {
-                            grid[yy + 1][x] = grid[yy][x];
+            'row: loop {
+                match (p2_t1.is_low(), p2_t2.is_low()) {
+                    (_, Ok(true)) => current_tetromino.move_left(&grid),
+                    (Ok(true), _) => current_tetromino.move_right(&grid),
+                    _ => {}
+                }
+
+                disp.clear();
+
+                for y in 0..GRID_HEIGHT {
+                    for x in 0..GRID_WIDTH {
+                        if grid[y][x] > 0 {
+                            disp.draw(block_drawable(y as i32, x as i32));
                         }
                     }
                 }
-            }
 
-            current_tetromino.y += 1;
+                disp.draw(tetromino_drawable(
+                    current_tetromino.x,
+                    current_tetromino.y,
+                    current_tetromino.typ,
+                ));
+
+                disp.flush().unwrap();
+
+                delay.delay_ms(30u16);
+
+                if current_tetromino.y >= GRID_HEIGHT as i32 - 4
+                    || !current_tetromino.can_move_down(&grid)
+                {
+                    if current_tetromino.y > 5 {
+                        draw_tetromino_on_grid(
+                            current_tetromino.x,
+                            current_tetromino.y,
+                            current_tetromino.typ,
+                            &mut grid,
+                        );
+                        break;
+                    } else {
+                        continue 'game;
+                    }
+                }
+
+                for y in 0..grid.len() {
+                    if grid[y].iter().all(|&x| x > 0) {
+                        //Erase row
+                        for x in grid[y].iter_mut() {
+                            *x = 0;
+                        }
+
+                        //Move each above erased row down
+                        for yy in (0..y).rev() {
+                            for x in 0..grid[yy].len() {
+                                grid[yy + 1][x] = grid[yy][x];
+                            }
+                        }
+                    }
+                }
+
+                current_tetromino.y += 1;
+            }
         }
     }
 }
