@@ -15,9 +15,9 @@ use wyhash::wyrng;
 
 const SCREEN_WIDTH: u8 = 128;
 const SCREEN_HEIGHT: u8 = 32;
-const GRID_WIDTH: usize = 10;
-const GRID_HEIGHT: usize = 40;
-const BLOCK_SIZE: i32 = 3;
+const GRID_WIDTH: usize = 8;
+const GRID_HEIGHT: usize = 32;
+const BLOCK_SIZE: i32 = 4;
 const MARGIN_X: i32 = (SCREEN_HEIGHT as i32 - BLOCK_SIZE * GRID_WIDTH as i32) / 2 + BLOCK_SIZE;
 const NUM_TETROMINOES: usize = 7;
 
@@ -137,7 +137,7 @@ pub fn tetris<E: core::fmt::Debug, GM: ssd1306::interface::DisplayInterface<Erro
 
             disp.flush().unwrap();
 
-            delay.delay_ms(50u16);
+            delay.delay_ms(30u16);
 
             if current_tetromino.y >= GRID_HEIGHT as i32 - 4
                 || !current_tetromino.can_move_down(&grid)
@@ -150,6 +150,23 @@ pub fn tetris<E: core::fmt::Debug, GM: ssd1306::interface::DisplayInterface<Erro
                 );
                 break;
             }
+
+            for y in 0..grid.len() {
+                if grid[y].iter().all(|&x| x > 0) {
+                    //Erase row
+                    for x in grid[y].iter_mut() {
+                        *x = 0;
+                    }
+
+                    //Move each above erased row down
+                    for yy in (0..y).rev() {
+                        for x in 0..grid[yy].len() {
+                            grid[yy + 1][x] = grid[yy][x];
+                        }
+                    }
+                }
+            }
+
             current_tetromino.y += 1;
         }
     }
