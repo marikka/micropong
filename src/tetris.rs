@@ -247,8 +247,6 @@ pub fn tetris<
 
                 disp.flush().unwrap();
 
-                block!(timer.wait());
-
                 if current_tetromino.y >= GRID_HEIGHT as i32 - 4
                     || !current_tetromino.can_move_down(&grid)
                 {
@@ -277,6 +275,7 @@ pub fn tetris<
                 }
 
                 current_tetromino.y += 1;
+                block!(timer.wait());
             }
         }
     }
