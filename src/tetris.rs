@@ -2,6 +2,7 @@ extern crate panic_halt;
 
 use crate::hal::{delay::Delay, prelude::*};
 use embedded_hal::digital::v2::InputPin;
+use embedded_hal::timer::CountDown;
 
 use embedded_graphics::pixelcolor::PixelColorU8;
 use embedded_graphics::prelude::*;
@@ -10,6 +11,10 @@ use ssd1306::prelude::*;
 
 extern crate wyhash;
 use wyhash::wyrng;
+
+use stm32f0xx_hal::time::Hertz;
+
+use nb::block;
 
 //use cortex_m_semihosting::hprintln;
 
@@ -182,9 +187,14 @@ impl Tetromino {
     }
 }
 
-pub fn tetris<E: core::fmt::Debug, GM: ssd1306::interface::DisplayInterface<Error = E>>(
+pub fn tetris<
+    E: core::fmt::Debug,
+    GM: ssd1306::interface::DisplayInterface<Error = E>,
+    T: CountDown<Time = Hertz>,
+>(
     disp: &mut GraphicsMode<GM>,
     delay: &mut Delay,
+    timer: &mut T,
     p1_t1: &mut impl InputPin<Error = ()>,
     p1_t2: &mut impl InputPin<Error = ()>,
     p2_t1: &mut impl InputPin<Error = ()>,
@@ -193,6 +203,7 @@ pub fn tetris<E: core::fmt::Debug, GM: ssd1306::interface::DisplayInterface<Erro
     p2_t4: &mut impl InputPin<Error = ()>,
 ) {
     let mut seed = 3;
+    timer.start(Hertz(6));
     'game: loop {
         let mut grid: Grid = [[0; GRID_WIDTH]; GRID_HEIGHT];
 
@@ -236,7 +247,7 @@ pub fn tetris<E: core::fmt::Debug, GM: ssd1306::interface::DisplayInterface<Erro
 
                 disp.flush().unwrap();
 
-                delay.delay_ms(60u16);
+                block!(timer.wait());
 
                 if current_tetromino.y >= GRID_HEIGHT as i32 - 4
                     || !current_tetromino.can_move_down(&grid)

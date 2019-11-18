@@ -10,6 +10,9 @@ use hal::gpio::gpiob::{PB6, PB7};
 use hal::gpio::{Alternate, AF1};
 use hal::i2c::I2c;
 use hal::stm32f0::stm32f0x2::I2C1;
+use hal::stm32f0::stm32f0x2::TIM1;
+use hal::time::Hertz;
+use hal::timers::Timer;
 use stm32f0xx_hal as hal;
 
 use ssd1306::prelude::*;
@@ -21,8 +24,17 @@ mod tetris;
 
 #[entry]
 fn main() -> ! {
-    let (mut delay, i2c, mut p1_t1, mut p1_t2, mut p2_t1, mut p2_t2, mut p2_t3, mut p2_t4) =
-        config_hardware();
+    let (
+        mut delay,
+        i2c,
+        mut timer,
+        mut p1_t1,
+        mut p1_t2,
+        mut p2_t1,
+        mut p2_t2,
+        mut p2_t3,
+        mut p2_t4,
+    ) = config_hardware();
 
     let mut disp: GraphicsMode<_> = Builder::new()
         .with_size(DisplaySize::Display128x32)
@@ -32,8 +44,8 @@ fn main() -> ! {
     disp.flush().unwrap();
 
     tetris::tetris(
-        &mut disp, &mut delay, &mut p1_t1, &mut p1_t2, &mut p2_t1, &mut p2_t2, &mut p2_t3,
-        &mut p2_t4,
+        &mut disp, &mut delay, &mut timer, &mut p1_t1, &mut p1_t2, &mut p2_t1, &mut p2_t2,
+        &mut p2_t3, &mut p2_t4,
     );
 
     loop {}
@@ -42,6 +54,7 @@ fn main() -> ! {
 fn config_hardware() -> (
     Delay,
     I2c<I2C1, PB6<Alternate<AF1>>, PB7<Alternate<AF1>>>,
+    Timer<TIM1>,
     impl InputPin<Error = ()>,
     impl InputPin<Error = ()>,
     impl InputPin<Error = ()>,
@@ -84,6 +97,8 @@ fn config_hardware() -> (
 
         let i2c = I2c::i2c1(p.I2C1, (scl, sda), 400.khz(), &mut rcc);
 
-        (delay, i2c, p1_t1, p1_t2, p2_t1, p2_t2, p2_t3, p2_t4)
+        let timer = Timer::tim1(p.TIM1, Hertz(1), &mut rcc);
+
+        (delay, i2c, timer, p1_t1, p1_t2, p2_t1, p2_t2, p2_t3, p2_t4)
     })
 }
