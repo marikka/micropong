@@ -4,7 +4,9 @@ Based on the cortex-m-quickstart repository.
 
 # HOW TO
 `$ rustup target add thumbv6m-none-eabi`
+
 `$ cargo build`
+
 `$ openocd -f interface/stlink-v2-1.cfg -f target/stm32f0x.cfg`
 
 # License
